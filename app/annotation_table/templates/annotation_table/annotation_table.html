@@ -1,80 +1,207 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Annotation Tracking Table</title>
+{% extends "general/base.html" %}
+
+{% block title %}Annotation Tracking Table{% endblock %}
+
+{% block content %}
     <link href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css" rel="stylesheet"/>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: sans-serif;
-            background: #2662CE;
-            color: white
+    <div>
+        <h1>Annotation Tracking Table</h1>
+        <hr>
+        <div id="annotation-table"></div>
+    </div>
+    <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
+    <script>
+        function getCsrfToken() {
+            const cookieVal = document.cookie.match('(^|;)\\s*' + 'csrf_token' + '\\s*=\\s*([^;]+)');
+            return cookieVal ? cookieVal.pop() : '';
         }
-    </style>
-</head>
-<body>
-<div>
-    <h1>Annotation Tracking Table</h1>
-    <hr>
-    <div id="annotation-table"></div>
-</div>
-<script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
-<script>
-    const updateUrl = (prev, query) => {
-        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
-    };
 
-    new gridjs.Grid({
-        columns: [
-            {id: 'site_id', name: 'Site ID'},
-            {id: 'video_id', name: 'Video ID'},
-            {id: 'segment_id', name: 'Segment ID', sort: false},
-            {id: 'stage', name: 'Annotation Stage', sort: false},
-            {id: 'video_length', name: 'Video Length', sort: false},
-            {id: 'expected_completion', name: 'Expected Completion'},
-            {id: 'actual_completion', name: 'Actual Completion'},
-            {
-                id: 'assigned_to', name: 'Assigned To Person/Group', formatter: (cell, row) => {
-                    return gridjs.html('<a href="mailto:' + cell + '">' + cell + '</a>');
+        const tableDiv = document.getElementById('annotation-table');
+        const form = `
+        <div class="form-group">
+            <form class="input" id="update_record">
+                <input type="text" id="input" name="site_id" placeholder="site_id">
+                <input type="text" id="input" name="donation_id" placeholder="donation_id">
+                <input type="text" id="input" name="video_id" placeholder="video_id">
+                <input type="text" id="input" name="segment_id" placeholder="segment_id">
+                <input type="text" id="input" name="stage" placeholder="stage">
+                <input type="text" id="input" name="video_length" placeholder="video_length">
+                <input type="text" id="input" name="assigned_to" placeholder="assigned_to">
+                <input type="submit" id="submit" value="Create New Record">
+            </form>
+        </div>
+        `;
+        const updateUrl = (prev, query) => {
+            return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+        };
+
+        const cellValues = (data, row, col) => {
+            if (row) {
+                return {contentEditable: 'true', 'data-element-id': row.cells[0].data, 'data-column-id': col.id}
+            } else {
+                return {}
+            }
+        };
+
+        const csrfToken = getCsrfToken();
+        console.log('csrfToken: ' + csrfToken)
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+        }
+        const fetchOptions = {
+            method: 'POST',
+            headers: headers,
+            credentials: 'same-origin',
+        }
+
+        new gridjs.Grid({
+            columns: [
+                {id: 'id', hidden: true},
+                {id: 'site_id', name: 'Site Ref', 'attributes': cellValues},
+                {id: 'donation_id', name: 'Donation Ref', 'attributes': cellValues},
+                {id: 'video_id', name: 'Video', 'attributes': cellValues},
+                {id: 'segment_id', name: 'Segment', sort: false, 'attributes': cellValues},
+                {id: 'stage', name: 'Stage', 'attributes': cellValues},
+                {id: 'video_length', name: 'Video Length', sort: false, 'attributes': cellValues},
+                {id: 'assigned_on', name: 'Assigned On', 'attributes': cellValues},
+                {
+                    id: 'assigned_to', name: 'Annotator', 'attributes': cellValues, formatter: (cell, row) => {
+                        return gridjs.html('<a href="mailto:' + cell + '">' + cell + '</a>');
+                    }
+                },
+            ],
+            server: {
+                url: '/api/table-data',
+                then: results => results.data,
+                total: results => results.total,
+            },
+            search: {
+                enabled: true,
+                server: {
+                    url: (prev, search) => {
+                        return updateUrl(prev, {search});
+                    },
+                },
+            },
+            sort: {
+                enabled: true,
+                multiColumn: true,
+                server: {
+                    url: (prev, columns) => {
+                        const columnIds = [
+                            'id',
+                            'site_id',
+                            'donation_id',
+                            'video_id',
+                            'segment_id',
+                            'stage',
+                            'video_length',
+                            'assigned_on',
+                            'assigned_to'];
+                        const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
+                        return updateUrl(prev, {sort});
+                    },
+                },
+            },
+            pagination: {
+                enabled: true,
+                server: {
+                    url: (prev, page, limit) => {
+                        return updateUrl(prev, {start: page * limit, length: limit});
+                    },
+                },
+            },
+        }).render(tableDiv);
+
+        let tableVal;
+
+
+        tableDiv.addEventListener('focusin', event => {
+            if (event.target.tagName === 'TD') {
+                tableVal = event.target.textContent;
+            }
+        });
+
+        function handleFocusout(event) {
+            const {target} = event;
+            const {tagName} = target;
+
+            if (tagName === 'TD') {
+                if (tableVal !== target.textContent) {
+                    const {elementId, columnId} = target.dataset;
+                    console.log(`id: ${elementId} ${columnId}: ${target.textContent}`);
+
+                    fetch('/api/table-data', {
+                        ...fetchOptions,
+                        body: JSON.stringify({
+                            id: elementId,
+                            column: columnId,
+                            value: target.textContent,
+                        }),
+                    }).then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            throw new Error(`HTTP error! status: ${response.status} ${response.statusText}` +
+                                ` ${response.text()}`);
+                        }
+                    }).then(data => {
+                        console.log(data);
+                    }).catch(error => {
+                        console.error('Error:', error);
+                    });
                 }
-            },
-        ],
-        server: {
-            url: '/api/table-data',
-            then: results => results.data,
-            total: results => results.total,
-        },
-        search: {
-            enabled: true,
-            server: {
-                url: (prev, search) => {
-                    return updateUrl(prev, {search});
-                },
-            },
-        },
-        sort: {
-            enabled: true,
-            multiColumn: true,
-            server: {
-                url: (prev, columns) => {
-                    const columnIds = ['site_id', 'video_id', 'expected_completion', 'assigned_to'];
-                    const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
-                    return updateUrl(prev, {sort});
-                },
-            },
-        },
-        pagination: {
-            enabled: true,
-            server: {
-                url: (prev, page, limit) => {
-                    return updateUrl(prev, {start: page * limit, length: limit});
-                },
-            },
-        },
-    }).render(document.getElementById('annotation-table'));
-</script>
 
-</body>
-</html>
+                tableVal = undefined;
+            }
+        }
+
+        tableDiv.addEventListener('focusout', handleFocusout);
+
+        tableDiv.addEventListener('keydown', (event) => {
+            if (event.target.tagName === 'TD') {
+                if (event.key === 'Escape') {
+                    event.target.textContent = tableVal;
+                    event.target.blur();
+                } else if (event.key === 'Enter') {
+                    event.preventDefault();
+                    event.target.blur();
+                }
+            }
+        });
+
+        tableDiv.innerHTML = form;
+        const addRecordForm = document.getElementById('update_record');
+        addRecordForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(addRecordForm);
+
+            fetch('/api/add-record', {
+                ...fetchOptions,
+                body: JSON.stringify({
+                    site_id: formData.get('site_id'),
+                    donation_id: formData.get('donation_id'),
+                    video_id: formData.get('video_id'),
+                    segment_id: formData.get('segment_id'),
+                    stage: formData.get('stage'),
+                    video_length: formData.get('video_length'),
+                    assigned_to: formData.get('assigned_to'),
+                }),
+            }).then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error(`HTTP error! status: ${response.status} ${response.statusText}` +
+                        ` ${response.text()}`);
+                }
+            }).then(data => {
+                console.log(data);
+            }).catch(error => {
+                console.error('Error:', error);
+            })
+        });
+
+    </script>
+{% endblock %}

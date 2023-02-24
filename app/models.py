@@ -36,7 +36,10 @@ class User(db.Model, UserMixin):
         return check_password_hash(self.password_hash, password)
 
     def can(self, permissions):
-        return self.role is not None and (self.role.permissions & permissions) == permissions
+        return (
+            self.role is not None
+            and (self.role.permissions & permissions) == permissions
+        )
 
     def is_administrator(self):
         return self.can(Permission.ADMINISTRATOR)
@@ -81,7 +84,7 @@ class Role(db.Model):
             role.reset_permissions()
             for perm in roles[r]:
                 role.add_permission(perm)
-            role.default = (role.name == default_role)
+            role.default = role.name == default_role
             db.session.add(role)
         db.session.commit()
 
@@ -109,24 +112,26 @@ class AnnotationTracking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     site_id = db.Column(db.String(64))
+    donation_id = db.Column(db.String(64))
     video_id = db.Column(db.String(64))
     segment_id = db.Column(db.String(64))
     stage = db.Column(db.String(64))
     video_length = db.Column(db.String(64))
-    expected_completion_time = db.Column(db.String(64))
-    actual_completion_time = db.Column(db.String(64))
+    assigned_on = db.Column(db.DateTime)
     assigned_to = db.Column(db.String(64))
+    completed_on = db.Column(db.DateTime)
 
     def to_dict(self):
         return {
+            "id": self.id,
             "site_id": self.site_id,
+            "donation_id": self.donation_id,
             "video_id": self.video_id,
             "segment_id": self.segment_id,
             "stage": self.stage,
             "video_length": self.video_length,
-            "expected_completion_time": self.expected_completion_time,
-            "actual_completion_time": self.actual_completion_time,
-            "assigned_to": self.assigned_to
+            "assigned_on": self.assigned_on,
+            "assigned_to": self.assigned_to,
         }
 
     def __repr__(self):
