@@ -23,7 +23,9 @@ class Config(object):
 
 class ProductionConfig(Config):
     if os.environ.get("DATABASE_URL") is not None:
-        SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL").replace("://", "ql://", 1)
+        SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL").replace(
+            "://", "ql://", 1
+        )
     else:
         SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(base_dir, "app.db")
 
@@ -39,6 +41,7 @@ class DockerConfig(ProductionConfig):
 
         import logging
         from logging import StreamHandler
+
         file_handler = StreamHandler()
         file_handler.setLevel(logging.INFO)
         app.logger.addHandler(file_handler)
@@ -54,3 +57,12 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     TESTING = True
     SESSION_COOKIE_SECURE = False
+
+
+config = {
+    'development': DevelopmentConfig,
+    'testing': TestingConfig,
+    'production': ProductionConfig,
+    'docker': DockerConfig,
+    'default': DevelopmentConfig
+}
