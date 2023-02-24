@@ -1,0 +1,63 @@
+{% extends "auth/base.html" %}
+{% block content %}
+    <div class="column is-4 is-offset-4">
+        <h3 class="title">Sign Up</h3>
+        <div class="box">
+            <form method="POST" action="">
+                {{ form.hidden_tag() }}
+                <p>
+                    {{ form.username.label }}<br>
+                    {{ form.username(size=32) }}
+                    {% for error in form.username.errors %}
+                        <span class="help is-danger">{{ error }}</span>
+                    {% endfor %}
+                </p>
+                <p>
+                    {{ form.email.label }}<br>
+                    {{ form.email(size=32) }}
+                    {% for error in form.email.errors %}
+                        <span class="help is-danger">{{ error }}</span>
+                    {% endfor %}
+                </p>
+                <p>
+                    {{ form.password.label }}<br>
+                    {{ form.password(size=32) }}
+                    {% for error in form.password.errors %}
+                        <span class="help is-danger">{{ error }}</span>
+                    {% endfor %}
+                </p>
+                <p>
+                    {{ form.password2.label }}<br>
+                    {{ form.password2(size=32) }}
+                    {% for error in form.password2.errors %}
+                        <span class="help is-danger">{{ error }}</span>
+                    {% endfor %}
+                </p>
+                <p>
+                    {{ form.first_name.label }}<br>
+                    {{ form.first_name(size=32) }}
+                    {% for error in form.first_name.errors %}
+                        <span class="help is-danger">{{ error }}</span>
+                    {% endfor %}
+                </p>
+                <p>
+                    {{ form.last_name.label }}<br>
+                    {{ form.last_name(size=32) }}
+                    {% for error in form.last_name.errors %}
+                        <span class="help is-danger">{{ error }}</span>
+                    {% endfor %}
+                </p>
+                <p>
+                    {{ form.occupation.label }}<br>
+                    {{ form.occupation(size=32) }}
+                    {% for error in form.occupation.errors %}
+                        <span class="help is-danger">{{ error }}</span>
+                    {% endfor %}
+                </p>
+                <p>
+                    {{ form.submit(class="button is-primary") }}
+                </p>
+            </form>
+        </div>
+    </div>
+{% endblock %}

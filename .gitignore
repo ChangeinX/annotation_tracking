@@ -1,0 +1,19 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Logs and databases
+*.log
+*.db
+*.sqlite3
+
+# Local environment files
+.env
+.flaskenv
+
+# PyCharm files
+.idea/
+
+# Dependencies
+venv/

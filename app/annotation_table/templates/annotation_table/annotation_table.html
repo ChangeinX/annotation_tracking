@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Annotation Tracking Table</title>
+    <link href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css" rel="stylesheet"/>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+            background: #2662CE;
+            color: white
+        }
+    </style>
+</head>
+<body>
+<div>
+    <h1>Annotation Tracking Table</h1>
+    <hr>
+    <div id="annotation-table"></div>
+</div>
+<script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
+<script>
+    const updateUrl = (prev, query) => {
+        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+    };
+
+    new gridjs.Grid({
+        columns: [
+            {id: 'site_id', name: 'Site ID'},
+            {id: 'video_id', name: 'Video ID'},
+            {id: 'segment_id', name: 'Segment ID', sort: false},
+            {id: 'stage', name: 'Annotation Stage', sort: false},
+            {id: 'video_length', name: 'Video Length', sort: false},
+            {id: 'expected_completion', name: 'Expected Completion'},
+            {id: 'actual_completion', name: 'Actual Completion'},
+            {
+                id: 'assigned_to', name: 'Assigned To Person/Group', formatter: (cell, row) => {
+                    return gridjs.html('<a href="mailto:' + cell + '">' + cell + '</a>');
+                }
+            },
+        ],
+        server: {
+            url: '/api/table-data',
+            then: results => results.data,
+            total: results => results.total,
+        },
+        search: {
+            enabled: true,
+            server: {
+                url: (prev, search) => {
+                    return updateUrl(prev, {search});
+                },
+            },
+        },
+        sort: {
+            enabled: true,
+            multiColumn: true,
+            server: {
+                url: (prev, columns) => {
+                    const columnIds = ['site_id', 'video_id', 'expected_completion', 'assigned_to'];
+                    const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
+                    return updateUrl(prev, {sort});
+                },
+            },
+        },
+        pagination: {
+            enabled: true,
+            server: {
+                url: (prev, page, limit) => {
+                    return updateUrl(prev, {start: page * limit, length: limit});
+                },
+            },
+        },
+    }).render(document.getElementById('annotation-table'));
+</script>
+
+</body>
+</html>
