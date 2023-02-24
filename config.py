@@ -60,6 +60,7 @@ class TestingConfig(Config):
 
 
 config = {
+    'heroku': ProductionConfig,
     'development': DevelopmentConfig,
     'testing': TestingConfig,
     'production': ProductionConfig,
