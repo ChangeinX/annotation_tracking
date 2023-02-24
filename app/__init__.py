@@ -1,5 +1,8 @@
+import logging
 import logging as log
 from logging.handlers import RotatingFileHandler
+
+import boto3
 
 from flask import Flask
 from flask_login import LoginManager
@@ -14,16 +17,14 @@ csrf = CSRFProtect()
 login_manager = LoginManager()
 login_manager.login_view = "auth.login"
 
-log.basicConfig(
-    level=log.DEBUG,
-    format="%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s",
-)
+logger = log.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
-handler = RotatingFileHandler(
-    "app.log", maxBytes=10000, backupCount=1
-)
-handler.setLevel(log.DEBUG)
-log.getLogger().addHandler(handler)
+handler = RotatingFileHandler('app.log', maxBytes=10000, backupCount=1)
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 def create_app(config_name):

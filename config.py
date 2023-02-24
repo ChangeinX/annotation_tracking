@@ -62,5 +62,5 @@ config = {
     'testing': TestingConfig,
     'production': ProductionConfig,
     'docker': DockerConfig,
-    'default': ProductionConfig
+    'default': DevelopmentConfig
 }
