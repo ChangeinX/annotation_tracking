@@ -2,8 +2,6 @@ import logging
 import logging as log
 from logging.handlers import RotatingFileHandler
 
-import boto3
-
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
