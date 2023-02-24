@@ -22,12 +22,9 @@ class Config(object):
 
 
 class ProductionConfig(Config):
-    if os.environ.get("DATABASE_URL") is not None:
-        SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL").replace(
-            "://", "ql://", 1
-        )
-    else:
-        SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(base_dir, "app.db")
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL").replace(
+        "://", "ql://", 1
+    )
 
     @classmethod
     def init_app(cls, app):
