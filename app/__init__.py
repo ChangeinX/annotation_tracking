@@ -31,6 +31,10 @@ def create_app(config_name):
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
 
+    print(f'config_name: {config_name}')
+    print(f'config[config_name]: {config[config_name]}')
+    print(f'config[config_name].SQLALCHEMY_DATABASE_URI: {config[config_name].SQLALCHEMY_DATABASE_URI}')
+
     db.init_app(app)
     csrf.init_app(app)
     login_manager.init_app(app)
