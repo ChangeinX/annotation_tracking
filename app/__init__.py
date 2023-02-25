@@ -1,3 +1,4 @@
+import logging
 import logging as log
 from logging.handlers import RotatingFileHandler
 
@@ -14,22 +15,24 @@ csrf = CSRFProtect()
 login_manager = LoginManager()
 login_manager.login_view = "auth.login"
 
-log.basicConfig(
-    level=log.DEBUG,
-    format="%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s",
-)
+logger = log.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
-handler = RotatingFileHandler(
-    "app.log", maxBytes=10000, backupCount=1
-)
-handler.setLevel(log.DEBUG)
-log.getLogger().addHandler(handler)
+handler = RotatingFileHandler('app.log', maxBytes=10000, backupCount=1)
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 def create_app(config_name):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
+
+    print(f'config_name: {config_name}')
+    print(f'config[config_name]: {config[config_name]}')
+    print(f'config[config_name].SQLALCHEMY_DATABASE_URI: {config[config_name].SQLALCHEMY_DATABASE_URI}')
 
     db.init_app(app)
     csrf.init_app(app)
