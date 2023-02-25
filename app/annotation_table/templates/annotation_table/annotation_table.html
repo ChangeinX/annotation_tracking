@@ -65,7 +65,7 @@
                 {id: 'segment_id', name: 'Segment', sort: false, 'attributes': cellValues},
                 {id: 'stage', name: 'Stage', 'attributes': cellValues},
                 {id: 'video_length', name: 'Video Length', sort: false, 'attributes': cellValues},
-                {id: 'assigned_on', name: 'Assigned On'},
+                {id: 'assigned_on', name: 'Created On', 'attributes': cellValues},
                 {
                     id: 'assigned_to', name: 'Annotator', 'attributes': cellValues, formatter: (cell, row) => {
                         return gridjs.html('<a href="mailto:' + cell + '">' + cell + '</a>');
